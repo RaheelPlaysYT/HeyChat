@@ -1,8 +1,8 @@
 import express from "express";
-import authRoutes from "../src/routes/authRoutes";
-import chatRoutes from "../src/routes/chatRoutes";
-import messageRoutes from "../src/routes/messageRoutes";
-import userRoutes from "../src/routes/userRoutes";
+import authRoutes from "./routes/authRoutes";
+import chatRoutes from "./routes/chatRoutes";
+import messageRoutes from "./routes/messageRoutes";
+import userRoutes from "./routes/userRoutes";
 
 const app = express();
 
