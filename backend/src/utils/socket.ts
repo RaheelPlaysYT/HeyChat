@@ -5,9 +5,6 @@ import { Message } from "../models/Message";
 import { Chat } from "../models/Chat";
 import { User } from "../models/User";
 
-interface SocketWithUserId extends Socket {
-    userId:string;
-}
 
 // store online users in memory : userId -> socketId
 export const onlineUsers: Map<string,string> = new Map()
@@ -17,7 +14,7 @@ export const initializeSocket = (httpServer:HttpServer) => {
         "http://localhost:8081", // Expo Mobile//
         "http://localhost:5173", // Vite web dev
         process.env.FRONTEND_URL as string, // Production 
-    ]
+    ].filter(Boolean) as string[];
     const io = new SocketServer(httpServer, { cors: { origin: allowedOrigins }});
 
     // verify socket connections if the user is authenticated, we will store the user id in the socket 
@@ -30,7 +27,7 @@ export const initializeSocket = (httpServer:HttpServer) => {
             const clerkId = session.sub;
             const user = await User.findOne({ clerkId });
             if (!user) return next (new Error ("User not found"));
-            (socket as SocketWithUserId).userId = user._id.toString()
+            socket.data.userId = user._id.toString()
             next()
         } catch (error: any) {
             next (new Error(error));
@@ -41,7 +38,7 @@ export const initializeSocket = (httpServer:HttpServer) => {
     // it's the event that is triggered when a new client connects to the server
 
 io.on("connection", (socket) => {
-    const userId = (socket as SocketWithUserId).userId
+    const userId = socket.data.userId
 
     // send list of current online users to the newly connected client
 
@@ -84,7 +81,7 @@ io.on("connection", (socket) => {
             chat.updatedAt = new Date();
             await chat.save();
 
-            await message.populate("sender", "name email avatar");
+            await message.populate("sender", "name avatar");
 
             // emit to chat room (for users inside the chat)
             io.to(`chat:${chatId}`).emit("new-message", message);
